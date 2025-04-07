@@ -1,10 +1,10 @@
 bl_info = {
-    'name': 'Multi Purpose',
+    'name': 'Multi Purpose New',
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 2, 0),
-    'version': (1, 2, 0),
-    'location': 'View3D > Sidebar > Multi Purpose',
+    'version': (1, 2, 1),
+    'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
     'tracker_url': "",
