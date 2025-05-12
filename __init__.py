@@ -78,29 +78,29 @@ class MP_OT_FindFilePaths(Operator):
     def execute(self, context):
         folder_path = self.directory
         
-        if "Animasyon Kütüphanesi" not in folder_path:
-            self.report({'WARNING'}, "Animasyon Kütüphanesi isimli klasörü seçiniz!")
-        else:
-            for library in bpy.data.libraries:
-                
-                file_path = library.filepath
-                file_name = os.path.basename(file_path)
-                
-                result = find_file(folder_path, file_name)
-                
-                if result:
-                    library.filepath = result
-                else:
-                    print("Dosya bulunamadı.")
-             
-            if bpy.data.filepath:
-                bpy.ops.wm.save_mainfile()
-            else:
-                
-                new_file_path = os.path.join(get_desktop_path(), "animasyon_projesi_mp.blend")
-                bpy.ops.wm.save_as_mainfile(filepath=new_file_path)
+        # if "Animasyon Kütüphanesi" not in folder_path:
+        #     self.report({'WARNING'}, "Animasyon Kütüphanesi isimli klasörü seçiniz!")
+        # else:
+        for library in bpy.data.libraries:
             
-            bpy.ops.wm.revert_mainfile()
+            file_path = library.filepath
+            file_name = os.path.basename(file_path)
+            
+            result = find_file(folder_path, file_name)
+            
+            if result:
+                library.filepath = result
+            else:
+                print("Dosya bulunamadı.")
+            
+        if bpy.data.filepath:
+            bpy.ops.wm.save_mainfile()
+        else:
+            
+            new_file_path = os.path.join(get_desktop_path(), "animasyon_projesi_mp.blend")
+            bpy.ops.wm.save_as_mainfile(filepath=new_file_path)
+        
+        bpy.ops.wm.revert_mainfile()
         
         return {'FINISHED'}
 
