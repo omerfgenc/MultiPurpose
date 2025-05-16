@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 2, 0),
-    'version': (1, 2, 5),
+    'version': (1, 2, 6),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -223,7 +223,7 @@ class MP_OT_WalkingStraight(Operator, ImportHelper):
         
         with bpy.data.libraries.load(self.filepath, link=False) as (data_from, data_to):
             for action in data_from.actions:
-                if "Yürüme Döngüsü" in action:
+                if "Yurume Dongusu" in action:
                     data_to.actions.append(action)
                     character_actions.append(action)
                 
