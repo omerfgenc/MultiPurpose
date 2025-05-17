@@ -290,6 +290,7 @@ def duz_yurume_uygula(act_name):
     if action and action.slots:
         # İlk slotu aktif hale getir
         action.slots.active = action.slots[0]
+        action.slots[0].select = True
         print(f"'{action.slots[0].name_display}' adlı slot aktif hale getirildi.")
     else:
         print("Geçerli bir Action veya slot bulunamadı.")
