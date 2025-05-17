@@ -285,7 +285,15 @@ def duz_yurume_uygula(act_name):
     bpy.ops.pose.select_all(action='DESELECT')
     obj.data.bones[bone.name].select = True
     obj.data.bones.active = obj.data.bones[bone.name]
-        
+    
+    action = anim_action
+    if action and action.slots:
+        # İlk slotu aktif hale getir
+        action.slots.active = action.slots[0]
+        print(f"'{action.slots[0].name_display}' adlı slot aktif hale getirildi.")
+    else:
+        print("Geçerli bir Action veya slot bulunamadı.")
+    
     bpy.context.scene.frame_set(1)
     loc_y_1 = obj.pose.bones["foot_ik.L"].location[1]
     loc_y_1 = abs(round(loc_y_1, 6))
