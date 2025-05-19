@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 1),
+    'version': (1, 3, 0),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -1217,6 +1217,12 @@ def register():
 
     for cls in classes:
         bpy.utils.register_class(cls)
+
+    addon_updater_ops.check_for_update_background()
+    if addon_updater_ops.updater.update_ready:
+        print("Güncelleme mevcut!")
+
+
         
     bpy.types.DOPESHEET_HT_header.append(draw_header)
 
