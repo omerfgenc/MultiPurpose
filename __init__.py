@@ -1128,25 +1128,6 @@ class MP_OT_ConfirmRunScript(Operator):
             self.report({'ERROR'}, f"Text bloğu bulunamadı: {self.text_name}")
                 
         return {'FINISHED'}
-    
-classes = (
-    # Link Operations
-    MP_PT_LinkOperations, MP_OT_FindFilePaths, MP_OT_KarakterRigi, MP_OT_ModelRigi, MP_OT_RelationsMake,
-    
-    # Animation Operations
-    MP_PT_AnimationOperations, MP_OT_WalkingStraight, MP_MT_Action_Menu, MP_OT_SetAction, 
-    MP_OT_CreatePath, MP_OT_BreakPath, MP_OT_RootMove,
-    
-    # Action Editor Operations
-    MP_MT_DeleteActionsMenu, MP_OT_DeleteActionConfirm, MP_OT_DeleteAction, 
-    MP_OT_ActionEditorHeader, MP_OT_DeleteAllActionAssets,
-    
-    # Scripting Settings
-    MP_PT_Scripting_Settings, MP_MT_RunScript, MP_OT_ConfirmRunScript,
-
-    # Demo Updater Panel
-    DemoUpdaterPanel
-)
 
 class DemoUpdaterPanel(Panel):
     bl_label = "Updater Demo Panel"
@@ -1167,6 +1148,25 @@ class DemoUpdaterPanel(Panel):
         # Güncelleme mevcutsa bildirim göster
         if addon_updater_ops.updater.update_ready:
             addon_updater_ops.update_notice_box_ui(self, context)
+
+classes = (
+    # Link Operations
+    MP_PT_LinkOperations, MP_OT_FindFilePaths, MP_OT_KarakterRigi, MP_OT_ModelRigi, MP_OT_RelationsMake,
+    
+    # Animation Operations
+    MP_PT_AnimationOperations, MP_OT_WalkingStraight, MP_MT_Action_Menu, MP_OT_SetAction, 
+    MP_OT_CreatePath, MP_OT_BreakPath, MP_OT_RootMove,
+    
+    # Action Editor Operations
+    MP_MT_DeleteActionsMenu, MP_OT_DeleteActionConfirm, MP_OT_DeleteAction, 
+    MP_OT_ActionEditorHeader, MP_OT_DeleteAllActionAssets,
+    
+    # Scripting Settings
+    MP_PT_Scripting_Settings, MP_MT_RunScript, MP_OT_ConfirmRunScript,
+
+    # Demo Updater Panel
+    DemoUpdaterPanel
+)
 
 
 @addon_updater_ops.make_annotations
