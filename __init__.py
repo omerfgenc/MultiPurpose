@@ -2,8 +2,8 @@ bl_info = {
     'name': 'Multi Purpose New',
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
-    'blender': (4, 2, 0),
-    'version': (1, 2, 8),
+    'blender': (4, 4, 0),
+    'version': (1, 2, 9),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -672,7 +672,14 @@ def path_yurume(act_name):
     bpy.ops.pose.select_all(action='DESELECT')
     obj.data.bones[bone.name].select = True
     obj.data.bones.active = obj.data.bones[bone.name]
-        
+    
+    action = anim_action
+    suitable_slots = [slot for slot in action.slots if slot.target_id_type == 'OBJECT']
+    if len(suitable_slots) > 0:
+        obj.animation_data.action_slot = suitable_slots[0]
+    else:
+        print("Slot Bulunamadi!")
+    
     bpy.context.scene.frame_set(1)
     loc_y_1 = bpy.context.object.pose.bones["foot_ik.L"].location[1]
     loc_y_1 = abs(round(loc_y_1, 6))
@@ -740,7 +747,10 @@ def path_yurume(act_name):
     bpy.context.view_layer.objects.active = curve
     
     if "bl_ext.blender_org.curve_tools" not in bpy.context.preferences.addons:
-        bpy.ops.extensions.package_install(repo_index=0, pkg_id="curve_tools")
+        try:
+            bpy.ops.extensions.package_install(repo_index=0, pkg_id="curve_tools")
+        except:
+            self.report({'ERROR'}, "Preferences'tan Get Extensions kısmından allow seçeneğini seçiniz!")
     
     bpy.ops.preferences.addon_enable(module="bl_ext.blender_org.curve_tools")
     bpy.ops.curvetools.operatorcurvelength()
