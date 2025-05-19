@@ -1372,9 +1372,8 @@ def register(bl_info):
     # Used to check/compare versions.
     updater.current_version = bl_info["version"]
 
-    # Optional, to hard-set update frequency, use this here - however, this
-    # demo has this set via UI properties.
-    # updater.set_check_interval(enabled=False, months=0, days=0, hours=0, minutes=2)
+    # Otomatik güncelleme kontrolü için varsayılan ayarları ayarla
+    updater.set_check_interval(enabled=True, months=0, days=1, hours=0, minutes=0)
 
     # Optional, consider turning off for production or allow as an option
     # This will print out additional debugging info to the console
@@ -1506,6 +1505,14 @@ def register(bl_info):
     # blender crashes).
     updater.auto_reload_post_update = False
 
+    # Otomatik güncelleme kontrolü için handler'ı ekle
+    if "scene_update_post" in dir(bpy.app.handlers):
+        if auto_check_for_update not in bpy.app.handlers.scene_update_post:
+            bpy.app.handlers.scene_update_post.append(auto_check_for_update)
+    else:
+        if auto_check_for_update not in bpy.app.handlers.depsgraph_update_post:
+            bpy.app.handlers.depsgraph_update_post.append(auto_check_for_update)
+
     # The register line items for all operators/panels.
     # If using bpy.utils.register_module(__name__) to register elsewhere
     # in the addon, delete these lines (also from unregister).
@@ -1521,6 +1528,14 @@ def register(bl_info):
 
 
 def unregister():
+    # Handler'ı kaldır
+    if "scene_update_post" in dir(bpy.app.handlers):
+        if auto_check_for_update in bpy.app.handlers.scene_update_post:
+            bpy.app.handlers.scene_update_post.remove(auto_check_for_update)
+    else:
+        if auto_check_for_update in bpy.app.handlers.depsgraph_update_post:
+            bpy.app.handlers.depsgraph_update_post.remove(auto_check_for_update)
+
     for cls in reversed(classes):
         # Comment out this line if using bpy.utils.unregister_module(__name__).
         bpy.utils.unregister_class(cls)
@@ -1536,3 +1551,17 @@ def unregister():
 
     global ran_background_check
     ran_background_check = False
+
+# Otomatik güncelleme kontrolü için handler fonksiyonu
+@persistent
+def auto_check_for_update(scene):
+    """Blender başlatıldığında otomatik güncelleme kontrolü yapar"""
+    if updater.invalid_updater:
+        return
+    
+    # Eğer zaten kontrol yapılıyorsa veya güncelleme hazırsa çık
+    if updater.async_checking or updater.update_ready is not None:
+        return
+        
+    # Güncelleme kontrolünü başlat
+    updater.check_for_update_async(background_update_callback)
