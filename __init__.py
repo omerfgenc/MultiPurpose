@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 4),
+    'version': (1, 3, 0),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -20,6 +20,25 @@ import os
 import re
 from pathlib import Path
 from . import addon_updater_ops
+
+# Güncelleme sistemi ayarları
+updater = addon_updater_ops.updater
+updater.user = "omerfgenc"  # GitHub kullanıcı adı
+updater.repo = "MultiPurpose"  # GitHub repo adı
+updater.website = "https://github.com/omerfgenc/MultiPurpose"  # GitHub repo URL'si
+updater.current_version = bl_info["version"]  # Mevcut versiyon
+updater.verbose = True  # Detaylı log mesajları
+updater.use_releases = True  # GitHub releases kullan
+updater.auto_reload_post_update = True  # Güncelleme sonrası otomatik yeniden yükleme
+updater.show_popups = True  # Güncelleme bildirimlerini göster
+
+# Güncelleme kontrol aralığı ayarları
+updater.set_check_interval(
+    enabled=True,  # Otomatik güncelleme kontrolünü etkinleştir
+    days=1,  # Her gün kontrol et
+    hours=0,  # Saat bazında kontrol yok
+    minutes=0  # Dakika bazında kontrol yok
+)
 
 ############################ Link Operations ############################
 
