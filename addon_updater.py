@@ -55,7 +55,16 @@ class SingletonUpdater:
     updates.
     """
     def __init__(self):
+        # Güncelleme kontrolü için gerekli ayarlar
+        self._check_interval_enabled = True  # Otomatik güncelleme kontrolünü etkinleştir
+        self._check_interval_days = 1  # 1 günde bir kontrol et
+        self._check_interval_hours = 0  # Saat bazında kontrol yok
+        self._check_interval_minutes = 0  # Dakika bazında kontrol yok
+        self._auto_reload_post_update = True  # Güncelleme sonrası otomatik yeniden yükleme
+        self._verbose = True  # Detaylı log mesajları
+        self._use_print_traces = True  # Hata izlerini göster
 
+        # Diğer başlangıç ayarları
         self._engine = GithubEngine()
         self._user = None
         self._repo = None
@@ -74,30 +83,16 @@ class SingletonUpdater:
         self._version_min_update = None
         self._version_max_update = None
 
-        # By default, backup current addon on update/target install.
+        # Yedekleme ayarları
         self._backup_current = True
         self._backup_ignore_patterns = None
 
-        # Set patterns the files to overwrite during an update.
+        # Güncelleme sırasında üzerine yazılacak dosya desenleri
         self._overwrite_patterns = ["*.py", "*.pyc"]
         self._remove_pre_update_patterns = list()
 
-        # By default, don't auto disable+re-enable the addon after an update,
-        # as this is less stable/often won't fully reload all modules anyways.
-        self._auto_reload_post_update = False
-
-        # Settings for the frequency of automated background checks.
-        self._check_interval_enabled = False
-        self._check_interval_months = 0
-        self._check_interval_days = 7
-        self._check_interval_hours = 0
-        self._check_interval_minutes = 0
-
-        # runtime variables, initial conditions
-        self._verbose = False
-        self._use_print_traces = True
-        self._fake_install = False
-        self._async_checking = False  # only true when async daemon started
+        # Çalışma zamanı değişkenleri
+        self._async_checking = False
         self._update_ready = None
         self._update_link = None
         self._update_version = None
@@ -106,9 +101,9 @@ class SingletonUpdater:
         self._select_link = None
         self.skip_tag = None
 
-        # Get data from the running blender module (addon).
+        # Addon bilgileri
         self._addon = __package__.lower()
-        self._addon_package = __package__  # Must not change.
+        self._addon_package = __package__
         self._updater_path = os.path.join(
             os.path.dirname(__file__), self._addon + "_updater")
         self._addon_root = os.path.dirname(__file__)
@@ -117,13 +112,11 @@ class SingletonUpdater:
         self._error_msg = None
         self._prefiltered_tag_count = 0
 
-        # UI properties, not used within this module but still useful to have.
-
-        # to verify a valid import, in place of placeholder import
-        self.show_popups = True  # UI uses to show popups or not.
+        # UI özellikleri
+        self.show_popups = True
         self.invalid_updater = False
 
-        # pre-assign basic select-link function
+        # Varsayılan link seçim fonksiyonu
         def select_link_function(self, tag):
             return tag["zipball_url"]
 
@@ -203,7 +196,6 @@ class SingletonUpdater:
     @property
     def check_interval(self):
         return (self._check_interval_enabled,
-                self._check_interval_months,
                 self._check_interval_days,
                 self._check_interval_hours,
                 self._check_interval_minutes)
@@ -570,7 +562,6 @@ class SingletonUpdater:
         else:
             self._check_interval_enabled = True
 
-        self._check_interval_months = months
         self._check_interval_days = days
         self._check_interval_hours = hours
         self._check_interval_minutes = minutes
@@ -1186,7 +1177,8 @@ class SingletonUpdater:
         return tuple(segments)
 
     def check_for_update_async(self, callback=None):
-        """Called for running check in a background thread"""
+        """Arka planda güncelleme kontrolü yapan fonksiyon"""
+        # Önceden kontrol edilmiş ve güncelleme hazır mı kontrol et
         is_ready = (
             self._json is not None
             and "update_ready" in self._json
@@ -1197,18 +1189,19 @@ class SingletonUpdater:
             self._update_ready = True
             self._update_link = self._json["version_text"]["link"]
             self._update_version = str(self._json["version_text"]["version"])
-            # Cached update.
-            callback(True)
+            # Önbelleğe alınmış güncelleme
+            if callback:
+                callback(True)
             return
 
-        # do the check
+        # Güncelleme kontrolü yap
         if not self._check_interval_enabled:
             return
         elif self._async_checking:
-            self.print_verbose("Skipping async check, already started")
-            # already running the bg thread
+            self.print_verbose("Arka plan kontrolü zaten başlatılmış, atlanıyor")
+            # Arka plan thread'i zaten çalışıyor
         elif self._update_ready is None:
-            print("{} updater: Running background check for update".format(
+            print("{} addon: Arka planda güncelleme kontrolü başlatılıyor".format(
                   self.addon))
             self.start_async_check_update(False, callback)
 
@@ -1462,7 +1455,7 @@ class SingletonUpdater:
         last_check = datetime.strptime(
             self._json["last_check"], "%Y-%m-%d %H:%M:%S.%f")
         offset = timedelta(
-            days=self._check_interval_days + 30 * self._check_interval_months,
+            days=self._check_interval_days + 30 * self._check_interval_days,
             hours=self._check_interval_hours,
             minutes=self._check_interval_minutes)
 

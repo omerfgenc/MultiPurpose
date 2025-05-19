@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 2, 9),
+    'version': (1, 3, 0),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -1142,8 +1142,32 @@ classes = (
     MP_OT_ActionEditorHeader, MP_OT_DeleteAllActionAssets,
     
     # Scripting Settings
-    MP_PT_Scripting_Settings, MP_MT_RunScript, MP_OT_ConfirmRunScript
+    MP_PT_Scripting_Settings, MP_MT_RunScript, MP_OT_ConfirmRunScript,
+
+    # Demo Updater Panel
+    DemoUpdaterPanel
 )
+
+class DemoUpdaterPanel(Panel):
+    bl_label = "Updater Demo Panel"
+    bl_idname = "OBJECT_PT_DemoUpdaterPanel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Tools'
+
+    def draw(self, context):
+        layout = self.layout
+
+        # Arka planda güncelleme kontrolü yap
+        addon_updater_ops.check_for_update_background()
+
+        # Diğer UI öğeleri
+        layout.label(text="Demo Updater Addon")
+
+        # Güncelleme mevcutsa bildirim göster
+        if addon_updater_ops.updater.update_ready:
+            addon_updater_ops.update_notice_box_ui(self, context)
+
 
 @addon_updater_ops.make_annotations
 class DemoPreferences(bpy.types.AddonPreferences):
@@ -1155,7 +1179,7 @@ class DemoPreferences(bpy.types.AddonPreferences):
 	auto_check_update = bpy.props.BoolProperty(
 		name="Auto-check for Update",
 		description="If enabled, auto-check for updates using an interval",
-		default=False)
+		default=True)
 
 	updater_interval_months = bpy.props.IntProperty(
 		name='Months',
@@ -1166,7 +1190,7 @@ class DemoPreferences(bpy.types.AddonPreferences):
 	updater_interval_days = bpy.props.IntProperty(
 		name='Days',
 		description="Number of days between checking for updates",
-		default=7,
+		default=1,
 		min=0,
 		max=31)
 
