@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 1),
+    'version': (1, 3, 0),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -1212,20 +1212,31 @@ classes = (
 )
 
 def register():
-
+    # Güncelleme sistemini kaydet
     addon_updater_ops.register(bl_info)
 
+    # Tüm sınıfları kaydet
     for cls in classes:
         bpy.utils.register_class(cls)
 
+    # Arka planda güncelleme kontrolü yap
     addon_updater_ops.check_for_update_background()
+    
+    # Güncelleme varsa bildirim göster
     if addon_updater_ops.updater.update_ready:
+        # Güncelleme bildirimi için popup göster
+        def show_update_popup(self, context):
+            self.layout.label(text="Yeni güncelleme mevcut!", icon='INFO')
+            self.layout.operator("multipurposenew.updater_update_now", text="Şimdi Güncelle", icon='FILE_REFRESH')
+        
+        # Bildirimi kaydet
+        bpy.context.window_manager.popup_menu(show_update_popup, title="Güncelleme Bildirimi", icon='INFO')
         print("Güncelleme mevcut!")
 
-
-        
+    # Action Editor header'a menü ekle
     bpy.types.DOPESHEET_HT_header.append(draw_header)
 
+    # Tab sekmelerini kaydet
     bpy.types.Scene.link_tabs = bpy.props.EnumProperty(
         items=[('TAB1', "Karakter", ""),
                ('TAB2', "Model", ""),
