@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 2),
+    'version': (1, 3, 0),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -1130,44 +1130,15 @@ class MP_OT_ConfirmRunScript(Operator):
         return {'FINISHED'}
 
 class DemoUpdaterPanel(Panel):
-    bl_label = "Updater Demo Panel"
-    bl_idname = "OBJECT_PT_DemoUpdaterPanel"
+    bl_label = "Güncelleme Ayarları"
+    bl_idname = "MP_PT_DemoUpdaterPanel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Tools'
+    bl_category = 'MP'
 
     def draw(self, context):
         layout = self.layout
-
-        # Arka planda güncelleme kontrolü yap
-        addon_updater_ops.check_for_update_background()
-
-        # Diğer UI öğeleri
-        layout.label(text="Demo Updater Addon")
-
-        # Güncelleme mevcutsa bildirim göster
-        if addon_updater_ops.updater.update_ready:
-            addon_updater_ops.update_notice_box_ui(self, context)
-
-classes = (
-    # Link Operations
-    MP_PT_LinkOperations, MP_OT_FindFilePaths, MP_OT_KarakterRigi, MP_OT_ModelRigi, MP_OT_RelationsMake,
-    
-    # Animation Operations
-    MP_PT_AnimationOperations, MP_OT_WalkingStraight, MP_MT_Action_Menu, MP_OT_SetAction, 
-    MP_OT_CreatePath, MP_OT_BreakPath, MP_OT_RootMove,
-    
-    # Action Editor Operations
-    MP_MT_DeleteActionsMenu, MP_OT_DeleteActionConfirm, MP_OT_DeleteAction, 
-    MP_OT_ActionEditorHeader, MP_OT_DeleteAllActionAssets,
-    
-    # Scripting Settings
-    MP_PT_Scripting_Settings, MP_MT_RunScript, MP_OT_ConfirmRunScript,
-
-    # Demo Updater Panel
-    DemoUpdaterPanel
-)
-
+        addon_updater_ops.update_notice_box_ui(self, context)
 
 @addon_updater_ops.make_annotations
 class DemoPreferences(bpy.types.AddonPreferences):
@@ -1212,6 +1183,33 @@ class DemoPreferences(bpy.types.AddonPreferences):
 		layout = self.layout
 		addon_updater_ops.update_settings_ui(self, context)
 
+classes = (
+    # Link Operations
+    MP_PT_LinkOperations, MP_OT_FindFilePaths, MP_OT_KarakterRigi, MP_OT_ModelRigi, MP_OT_RelationsMake,
+    
+    # Animation Operations
+    MP_PT_AnimationOperations, MP_OT_WalkingStraight, MP_MT_Action_Menu, MP_OT_SetAction, 
+    MP_OT_CreatePath, MP_OT_BreakPath, MP_OT_RootMove,
+    
+    # Action Editor Operations
+    MP_MT_DeleteActionsMenu, MP_OT_DeleteActionConfirm, MP_OT_DeleteAction, 
+    MP_OT_ActionEditorHeader, MP_OT_DeleteAllActionAssets,
+    
+    # Scripting Settings
+    MP_PT_Scripting_Settings, MP_MT_RunScript, MP_OT_ConfirmRunScript,
+
+    # Updater
+    DemoUpdaterPanel, DemoPreferences,
+    addon_updater_ops.AddonUpdaterInstallPopup,
+    addon_updater_ops.AddonUpdaterCheckNow,
+    addon_updater_ops.AddonUpdaterUpdateNow,
+    addon_updater_ops.AddonUpdaterUpdateTarget,
+    addon_updater_ops.AddonUpdaterInstallManually,
+    addon_updater_ops.AddonUpdaterUpdatedSuccessful,
+    addon_updater_ops.AddonUpdaterRestoreBackup,
+    addon_updater_ops.AddonUpdaterIgnore,
+    addon_updater_ops.AddonUpdaterEndBackground
+)
 
 def register():
 
@@ -1222,8 +1220,6 @@ def register():
         
     bpy.types.DOPESHEET_HT_header.append(draw_header)
 
-    bpy.utils.register_class(DemoPreferences)
-    
     bpy.types.Scene.link_tabs = bpy.props.EnumProperty(
         items=[('TAB1', "Karakter", ""),
                ('TAB2', "Model", ""),
@@ -1246,8 +1242,6 @@ def unregister():
         bpy.utils.unregister_class(cls)
 
     bpy.types.DOPESHEET_HT_header.remove(draw_header)
-
-    bpy.utils.unregister_class(DemoPreferences)
     
     del bpy.types.Scene.link_tabs
     del bpy.types.Scene.animation_tabs
