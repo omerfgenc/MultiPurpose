@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 2),
+    'version': (1, 3, 3),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -1138,6 +1138,17 @@ class DemoUpdaterPanel(Panel):
 
     def draw(self, context):
         layout = self.layout
+        
+        # Güncelleme durumunu göster
+        if addon_updater_ops.updater.update_ready:
+            box = layout.box()
+            box.label(text="Yeni güncelleme mevcut!", icon='INFO')
+            box.label(text=f"Versiyon: v{addon_updater_ops.updater.version_text['version']}")
+            box.operator("multipurposenew.updater_update_now", text="Şimdi Güncelle", icon='FILE_REFRESH')
+        else:
+            layout.label(text="Eklenti güncel.", icon='CHECKMARK')
+            
+        # Güncelleme ayarları
         addon_updater_ops.update_notice_box_ui(self, context)
 
 @addon_updater_ops.make_annotations
@@ -1221,6 +1232,8 @@ def register():
 
     # Arka planda güncelleme kontrolü yap
     addon_updater_ops.check_for_update_background()
+    print("Güncelleme kontrolü yapıldı!")
+    print("Sonuç: ", addon_updater_ops.updater.update_ready)
     
     # Güncelleme varsa bildirim göster
     if addon_updater_ops.updater.update_ready:
