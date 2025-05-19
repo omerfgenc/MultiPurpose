@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 2, 0),
-    'version': (1, 2, 7),
+    'version': (1, 2, 8),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -287,13 +287,11 @@ def duz_yurume_uygula(act_name):
     obj.data.bones.active = obj.data.bones[bone.name]
     
     action = anim_action
-    if action and action.slots:
-        # İlk slotu aktif hale getir
-        action.slots.active = action.slots[0]
-        action.slots[0].select = True
-        print(f"'{action.slots[0].name_display}' adlı slot aktif hale getirildi.")
+    suitable_slots = [slot for slot in action.slots if slot.target_id_type == 'OBJECT']
+    if len(suitable_slots) > 0:
+        obj.animation_data.action_slot = suitable_slots[0]
     else:
-        print("Geçerli bir Action veya slot bulunamadı.")
+        print("Slot Bulunamadi!")
     
     bpy.context.scene.frame_set(1)
     loc_y_1 = obj.pose.bones["foot_ik.L"].location[1]
