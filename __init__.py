@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 1),
+    'version': (1, 3, 0),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -1230,30 +1230,32 @@ classes = (
 
     # Updater
     DemoUpdaterPanel, DemoPreferences,
-    addon_updater_ops.AddonUpdaterInstallPopup,
-    addon_updater_ops.AddonUpdaterCheckNow,
-    addon_updater_ops.AddonUpdaterUpdateNow,
-    addon_updater_ops.AddonUpdaterUpdateTarget,
-    addon_updater_ops.AddonUpdaterInstallManually,
-    addon_updater_ops.AddonUpdaterUpdatedSuccessful,
-    addon_updater_ops.AddonUpdaterRestoreBackup,
-    addon_updater_ops.AddonUpdaterIgnore,
-    addon_updater_ops.AddonUpdaterEndBackground
 )
 
 def register():
-    # Güncelleme sistemini kaydet
-    addon_updater_ops.register(bl_info)
+    # Addon updater code and configurations.
+    # In case of a broken version, try to register the updater first so that
+    # users can revert back to a working version.
+    try:
+        addon_updater_ops.register(bl_info)
+    except Exception as e:
+        print("Updater registration failed: {}".format(str(e)))
+        pass
 
-    # Tüm sınıfları kaydet
+    # Register the example panel, to show updater buttons.
     for cls in classes:
-        bpy.utils.register_class(cls)
+        try:
+            bpy.utils.register_class(cls)
+        except Exception as e:
+            print("Registration failed for some classes: {}".format(str(e)))
+            pass
 
-    # Arka planda güncelleme kontrolü yap
-    addon_updater_ops.check_for_update_background()
-    print("Güncelleme kontrolü yapıldı!")
-    print("Sonuç: ", addon_updater_ops.updater.update_ready)
-    
+    # Register the updater's background check handler
+    if "scene_update_post" in dir(bpy.app.handlers):
+        bpy.app.handlers.scene_update_post.append(check_for_update_background)
+    else:
+        bpy.app.handlers.depsgraph_update_post.append(check_for_update_background)
+
     # Güncelleme varsa bildirim göster
     if addon_updater_ops.updater.update_ready:
         # Güncelleme bildirimi için popup göster
