@@ -1373,7 +1373,7 @@ def register(bl_info):
     updater.current_version = bl_info["version"]
 
     # Otomatik güncelleme kontrolü için varsayılan ayarları ayarla
-    updater.set_check_interval(enabled=True, months=0, days=1, hours=0, minutes=0)
+    updater.set_check_interval(enabled=True, months=0, days=0, hours=0, minutes=0)
 
     # Optional, consider turning off for production or allow as an option
     # This will print out additional debugging info to the console
