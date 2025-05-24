@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 3),
+    'version': (1, 3, 4),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -1221,6 +1221,14 @@ def check_for_update_background():
     global ran_background_check
     if ran_background_check:
         # Global değişken kontrolün sadece bir kez yapılmasını sağlar
+        if updater.update_ready:
+            # Güncelleme varsa bildirim göster
+            def show_update_popup(self, context):
+                self.layout.label(text="Multi Purpose'a güncelleme geldi, lütfen güncelleyin!", icon='INFO')
+                self.layout.operator("multipurposenew.updater_update_now", text="Şimdi Güncelle", icon='FILE_REFRESH')
+            
+            # Bildirimi göster
+            bpy.context.window_manager.popup_menu(show_update_popup, title="Güncelleme Bildirimi", icon='INFO')
         return
     elif updater.update_ready is not None or updater.async_checking:
         # Kontrol zaten yapıldı
