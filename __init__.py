@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 5),
+    'version': (1, 3, 6),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -1148,28 +1148,6 @@ class MP_OT_ConfirmRunScript(Operator):
                 
         return {'FINISHED'}
 
-class DemoUpdaterPanel(Panel):
-    bl_label = "Güncelleme Ayarları"
-    bl_idname = "MP_PT_DemoUpdaterPanel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'MP'
-
-    def draw(self, context):
-        layout = self.layout
-        
-        # Güncelleme durumunu göster
-        if addon_updater_ops.updater.update_ready:
-            box = layout.box()
-            box.label(text="Yeni güncelleme mevcut!", icon='INFO')
-            box.label(text=f"Versiyon: v{addon_updater_ops.updater.version_text['version']}")
-            box.operator("multipurposenew.updater_update_now", text="Şimdi Güncelle", icon='FILE_REFRESH')
-        else:
-            layout.label(text="Eklenti güncel.", icon='CHECKMARK')
-            
-        # Güncelleme ayarları
-        addon_updater_ops.update_notice_box_ui(self, context)
-
 @addon_updater_ops.make_annotations
 class DemoPreferences(bpy.types.AddonPreferences):
 	
@@ -1213,46 +1191,6 @@ class DemoPreferences(bpy.types.AddonPreferences):
 		layout = self.layout
 		addon_updater_ops.update_settings_ui(self, context)
 
-# Arka planda güncelleme kontrolü için fonksiyon
-def check_for_update_background():
-    """Arka planda güncelleme kontrolü yapar"""
-    if updater.invalid_updater:
-        return
-    global ran_background_check
-    if ran_background_check:
-        # Global değişken kontrolün sadece bir kez yapılmasını sağlar
-        if updater.update_ready:
-            # Güncelleme varsa bildirim göster
-            def show_update_popup(self, context):
-                self.layout.label(text="Multi Purpose'a güncelleme geldi, lütfen güncelleyin!", icon='INFO')
-                self.layout.operator("multipurposenew.updater_update_now", text="Şimdi Güncelle", icon='FILE_REFRESH')
-            
-            # Bildirimi göster
-            bpy.context.window_manager.popup_menu(show_update_popup, title="Güncelleme Bildirimi", icon='INFO')
-        return
-    elif updater.update_ready is not None or updater.async_checking:
-        # Kontrol zaten yapıldı
-        return
-
-    # UI ayarlarını uygula
-    settings = get_user_preferences(bpy.context)
-    if not settings:
-        return
-    updater.set_check_interval(enabled=settings.auto_check_update,
-                               months=settings.updater_interval_months,
-                               days=settings.updater_interval_days,
-                               hours=settings.updater_interval_hours,
-                               minutes=settings.updater_interval_minutes)
-
-    # Güncelleme kontrolünü başlat
-    updater.check_for_update_async(background_update_callback)
-    ran_background_check = True
-
-# Register the updater's background check handler
-if "scene_update_post" in dir(bpy.app.handlers):
-    bpy.app.handlers.scene_update_post.append(check_for_update_background)
-else:
-    bpy.app.handlers.depsgraph_update_post.append(check_for_update_background)
 
 classes = (
     # Link Operations
@@ -1270,7 +1208,7 @@ classes = (
     MP_PT_Scripting_Settings, MP_MT_RunScript, MP_OT_ConfirmRunScript,
 
     # Updater
-    DemoUpdaterPanel, DemoPreferences,
+    DemoPreferences,
 )
 
 def register():

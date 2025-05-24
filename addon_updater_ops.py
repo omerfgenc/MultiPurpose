@@ -695,32 +695,38 @@ def updater_run_install_popup_handler(scene):
     getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
 
 
-# Arka plan güncelleme kontrolü için callback fonksiyonu
 def background_update_callback(update_ready):
-    """Arka planda güncelleme kontrolü tamamlandığında çağrılır"""
-    if update_ready:
-        # Güncelleme hazırsa kullanıcıya bildir
-        updater.update_ready = True
-        updater.update_ready_message = "Yeni güncelleme mevcut!"
-    else:
-        # Güncelleme yoksa veya hata oluştuysa
-        updater.update_ready = False
-        updater.update_ready_message = "Güncelleme kontrolü tamamlandı."
+    """Passed into the updater, background thread updater"""
+    global ran_auto_check_install_popup
+    updater.print_verbose("Running background update callback")
 
-
-# Otomatik güncelleme kontrolü için handler fonksiyonu
-@persistent
-def auto_check_for_update(scene):
-    """Blender başlatıldığında otomatik güncelleme kontrolü yapar"""
+    # In case of error importing updater.
     if updater.invalid_updater:
         return
-    
-    # Eğer zaten kontrol yapılıyorsa veya güncelleme hazırsa çık
-    if updater.async_checking or updater.update_ready is not None:
+    if not updater.show_popups:
+        return
+    if not update_ready:
         return
 
-    # Güncelleme kontrolünü başlat
-    updater.check_for_update_async(background_update_callback)
+    # See if we need add to the update handler to trigger the popup.
+    handlers = []
+    if "scene_update_post" in dir(bpy.app.handlers):  # 2.7x
+        handlers = bpy.app.handlers.scene_update_post
+    else:  # 2.8+
+        handlers = bpy.app.handlers.depsgraph_update_post
+    in_handles = updater_run_install_popup_handler in handlers
+
+    if in_handles or ran_auto_check_install_popup:
+        return
+
+    if "scene_update_post" in dir(bpy.app.handlers):  # 2.7x
+        bpy.app.handlers.scene_update_post.append(
+            updater_run_install_popup_handler)
+    else:  # 2.8+
+        bpy.app.handlers.depsgraph_update_post.append(
+            updater_run_install_popup_handler)
+    ran_auto_check_install_popup = True
+    updater.print_verbose("Attempted popup prompt")
 
 
 def post_update_callback(module_name, res=None):
@@ -1366,8 +1372,9 @@ def register(bl_info):
     # Used to check/compare versions.
     updater.current_version = bl_info["version"]
 
-    # Otomatik güncelleme kontrolü için varsayılan ayarları ayarla
-    updater.set_check_interval(enabled=True, months=0, days=0, hours=0, minutes=1)
+    # Optional, to hard-set update frequency, use this here - however, this
+    # demo has this set via UI properties.
+    # updater.set_check_interval(enabled=False, months=0, days=0, hours=0, minutes=2)
 
     # Optional, consider turning off for production or allow as an option
     # This will print out additional debugging info to the console
@@ -1442,7 +1449,7 @@ def register(bl_info):
     # which enables pulling down release logs/notes, as well as installs update
     # from release-attached zips (instead of the auto-packaged code generated
     # with a release/tag). Setting has no impact on BitBucket or GitLab repos.
-    updater.use_releases = False
+    updater.use_releases = True
     # Note: Releases always have a tag, but a tag may not always be a release.
     # Therefore, setting True above will filter out any non-annotated tags.
     # Note 2: Using this option will also display (and filter by) the release
@@ -1499,14 +1506,6 @@ def register(bl_info):
     # blender crashes).
     updater.auto_reload_post_update = False
 
-    # Otomatik güncelleme kontrolü için handler'ı ekle
-    if "scene_update_post" in dir(bpy.app.handlers):
-        if auto_check_for_update not in bpy.app.handlers.scene_update_post:
-            bpy.app.handlers.scene_update_post.append(auto_check_for_update)
-    else:
-        if auto_check_for_update not in bpy.app.handlers.depsgraph_update_post:
-            bpy.app.handlers.depsgraph_update_post.append(auto_check_for_update)
-
     # The register line items for all operators/panels.
     # If using bpy.utils.register_module(__name__) to register elsewhere
     # in the addon, delete these lines (also from unregister).
@@ -1522,14 +1521,6 @@ def register(bl_info):
 
 
 def unregister():
-    # Handler'ı kaldır
-    if "scene_update_post" in dir(bpy.app.handlers):
-        if auto_check_for_update in bpy.app.handlers.scene_update_post:
-            bpy.app.handlers.scene_update_post.remove(auto_check_for_update)
-    else:
-        if auto_check_for_update in bpy.app.handlers.depsgraph_update_post:
-            bpy.app.handlers.depsgraph_update_post.remove(auto_check_for_update)
-
     for cls in reversed(classes):
         # Comment out this line if using bpy.utils.unregister_module(__name__).
         bpy.utils.unregister_class(cls)
