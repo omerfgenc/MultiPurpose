@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 7),
+    'version': (1, 2, 9),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -20,25 +20,6 @@ import os
 import re
 from pathlib import Path
 from . import addon_updater_ops
-
-# Güncelleme sistemi ayarları
-updater = addon_updater_ops.updater
-updater.user = "omerfgenc"  # GitHub kullanıcı adı
-updater.repo = "MultiPurpose"  # GitHub repo adı
-updater.website = "https://github.com/omerfgenc/MultiPurpose"  # GitHub repo URL'si
-updater.current_version = bl_info["version"]  # Mevcut versiyon
-updater.verbose = True  # Detaylı log mesajları
-updater.use_releases = True  # GitHub releases kullan
-updater.auto_reload_post_update = True  # Güncelleme sonrası otomatik yeniden yükleme
-updater.show_popups = True  # Güncelleme bildirimlerini göster
-
-# Güncelleme kontrol aralığı ayarları
-updater.set_check_interval(
-    enabled=True,  # Otomatik güncelleme kontrolünü etkinleştir
-    days=0,  # Her gün kontrol et
-    hours=0,  # Saat bazında kontrol yok
-    minutes=1  # Dakika bazında kontrol yok
-)
 
 ############################ Link Operations ############################
 
@@ -1147,51 +1128,7 @@ class MP_OT_ConfirmRunScript(Operator):
             self.report({'ERROR'}, f"Text bloğu bulunamadı: {self.text_name}")
                 
         return {'FINISHED'}
-
-@addon_updater_ops.make_annotations
-class DemoPreferences(bpy.types.AddonPreferences):
-	
-	bl_idname = __package__
-
-	# Addon updater preferences.
-
-	auto_check_update = bpy.props.BoolProperty(
-		name="Auto-check for Update",
-		description="If enabled, auto-check for updates using an interval",
-		default=True)
-
-	updater_interval_months = bpy.props.IntProperty(
-		name='Months',
-		description="Number of months between checking for updates",
-		default=0,
-		min=0)
-
-	updater_interval_days = bpy.props.IntProperty(
-		name='Days',
-		description="Number of days between checking for updates",
-		default=0,
-		min=0,
-		max=31)
-
-	updater_interval_hours = bpy.props.IntProperty(
-		name='Hours',
-		description="Number of hours between checking for updates",
-		default=0,
-		min=0,
-		max=23)
-
-	updater_interval_minutes = bpy.props.IntProperty(
-		name='Minutes',
-		description="Number of minutes between checking for updates",
-		default=1,
-		min=0,
-		max=59)
-
-	def draw(self, context):
-		layout = self.layout
-		addon_updater_ops.update_settings_ui(self, context)
-
-
+    
 classes = (
     # Link Operations
     MP_PT_LinkOperations, MP_OT_FindFilePaths, MP_OT_KarakterRigi, MP_OT_ModelRigi, MP_OT_RelationsMake,
@@ -1205,45 +1142,64 @@ classes = (
     MP_OT_ActionEditorHeader, MP_OT_DeleteAllActionAssets,
     
     # Scripting Settings
-    MP_PT_Scripting_Settings, MP_MT_RunScript, MP_OT_ConfirmRunScript,
-
-    # Updater
-    DemoPreferences,
+    MP_PT_Scripting_Settings, MP_MT_RunScript, MP_OT_ConfirmRunScript
 )
 
+@addon_updater_ops.make_annotations
+class DemoPreferences(bpy.types.AddonPreferences):
+	
+	bl_idname = __package__
+
+	# Addon updater preferences.
+
+	auto_check_update = bpy.props.BoolProperty(
+		name="Auto-check for Update",
+		description="If enabled, auto-check for updates using an interval",
+		default=False)
+
+	updater_interval_months = bpy.props.IntProperty(
+		name='Months',
+		description="Number of months between checking for updates",
+		default=0,
+		min=0)
+
+	updater_interval_days = bpy.props.IntProperty(
+		name='Days',
+		description="Number of days between checking for updates",
+		default=7,
+		min=0,
+		max=31)
+
+	updater_interval_hours = bpy.props.IntProperty(
+		name='Hours',
+		description="Number of hours between checking for updates",
+		default=0,
+		min=0,
+		max=23)
+
+	updater_interval_minutes = bpy.props.IntProperty(
+		name='Minutes',
+		description="Number of minutes between checking for updates",
+		default=0,
+		min=0,
+		max=59)
+
+	def draw(self, context):
+		layout = self.layout
+		addon_updater_ops.update_settings_ui(self, context)
+
+
 def register():
-    # Addon updater code and configurations.
-    # In case of a broken version, try to register the updater first so that
-    # users can revert back to a working version.
-    try:
-        addon_updater_ops.register(bl_info)
-    except Exception as e:
-        print("Updater registration failed: {}".format(str(e)))
-        pass
 
-    # Register the example panel, to show updater buttons.
+    addon_updater_ops.register(bl_info)
+
     for cls in classes:
-        try:
-            bpy.utils.register_class(cls)
-        except Exception as e:
-            print("Registration failed for some classes: {}".format(str(e)))
-            pass
-
-    # Güncelleme varsa bildirim göster
-    if addon_updater_ops.updater.update_ready:
-        # Güncelleme bildirimi için popup göster
-        def show_update_popup(self, context):
-            self.layout.label(text="Yeni güncelleme mevcut!", icon='INFO')
-            self.layout.operator("multipurposenew.updater_update_now", text="Şimdi Güncelle", icon='FILE_REFRESH')
+        bpy.utils.register_class(cls)
         
-        # Bildirimi kaydet
-        bpy.context.window_manager.popup_menu(show_update_popup, title="Güncelleme Bildirimi", icon='INFO')
-        print("Güncelleme mevcut!")
-
-    # Action Editor header'a menü ekle
     bpy.types.DOPESHEET_HT_header.append(draw_header)
 
-    # Tab sekmelerini kaydet
+    bpy.utils.register_class(DemoPreferences)
+    
     bpy.types.Scene.link_tabs = bpy.props.EnumProperty(
         items=[('TAB1', "Karakter", ""),
                ('TAB2', "Model", ""),
@@ -1266,6 +1222,8 @@ def unregister():
         bpy.utils.unregister_class(cls)
 
     bpy.types.DOPESHEET_HT_header.remove(draw_header)
+
+    bpy.utils.unregister_class(DemoPreferences)
     
     del bpy.types.Scene.link_tabs
     del bpy.types.Scene.animation_tabs
