@@ -698,29 +698,37 @@ def updater_run_install_popup_handler(scene):
 # Arka plan güncelleme kontrolü için callback fonksiyonu
 def background_update_callback(update_ready):
     """Arka planda güncelleme kontrolü tamamlandığında çağrılır"""
-    if update_ready:
-        # Güncelleme hazırsa kullanıcıya bildir
-        updater.update_ready = True
-        updater.update_ready_message = "Yeni güncelleme mevcut!"
-    else:
-        # Güncelleme yoksa veya hata oluştuysa
-        updater.update_ready = False
-        updater.update_ready_message = "Güncelleme kontrolü tamamlandı."
+    global ran_auto_check_install_popup
+    updater.print_verbose("Running background update callback")
 
-
-# Otomatik güncelleme kontrolü için handler fonksiyonu
-@persistent
-def auto_check_for_update(scene):
-    """Blender başlatıldığında otomatik güncelleme kontrolü yapar"""
+    # Updater modülü hatalıysa veya popuplar kapalıysa çık
     if updater.invalid_updater:
         return
-    
-    # Eğer zaten kontrol yapılıyorsa veya güncelleme hazırsa çık
-    if updater.async_checking or updater.update_ready is not None:
+    if not updater.show_popups:
         return
-        
-    # Güncelleme kontrolünü başlat
-    updater.check_for_update_async(background_update_callback)
+    if not update_ready:
+        return
+
+    # Popup handler'ı eklememiz gerekip gerekmediğini kontrol et
+    handlers = []
+    if "scene_update_post" in dir(bpy.app.handlers):  # 2.7x
+        handlers = bpy.app.handlers.scene_update_post
+    else:  # 2.8+
+        handlers = bpy.app.handlers.depsgraph_update_post
+    in_handles = updater_run_install_popup_handler in handlers
+
+    if in_handles or ran_auto_check_install_popup:
+        return
+
+    # Popup handler'ı ekle
+    if "scene_update_post" in dir(bpy.app.handlers):  # 2.7x
+        bpy.app.handlers.scene_update_post.append(
+            updater_run_install_popup_handler)
+    else:  # 2.8+
+        bpy.app.handlers.depsgraph_update_post.append(
+            updater_run_install_popup_handler)
+    ran_auto_check_install_popup = True
+    updater.print_verbose("Attempted popup prompt")
 
 
 def post_update_callback(module_name, res=None):
