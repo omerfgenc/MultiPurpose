@@ -695,38 +695,32 @@ def updater_run_install_popup_handler(scene):
     getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
 
 
+# Arka plan güncelleme kontrolü için callback fonksiyonu
 def background_update_callback(update_ready):
-    """Passed into the updater, background thread updater"""
-    global ran_auto_check_install_popup
-    updater.print_verbose("Running background update callback")
+    """Arka planda güncelleme kontrolü tamamlandığında çağrılır"""
+    if update_ready:
+        # Güncelleme hazırsa kullanıcıya bildir
+        updater.update_ready = True
+        updater.update_ready_message = "Yeni güncelleme mevcut!"
+    else:
+        # Güncelleme yoksa veya hata oluştuysa
+        updater.update_ready = False
+        updater.update_ready_message = "Güncelleme kontrolü tamamlandı."
 
-    # In case of error importing updater.
+
+# Otomatik güncelleme kontrolü için handler fonksiyonu
+@persistent
+def auto_check_for_update(scene):
+    """Blender başlatıldığında otomatik güncelleme kontrolü yapar"""
     if updater.invalid_updater:
         return
-    if not updater.show_popups:
+    
+    # Eğer zaten kontrol yapılıyorsa veya güncelleme hazırsa çık
+    if updater.async_checking or updater.update_ready is not None:
         return
-    if not update_ready:
-        return
-
-    # See if we need add to the update handler to trigger the popup.
-    handlers = []
-    if "scene_update_post" in dir(bpy.app.handlers):  # 2.7x
-        handlers = bpy.app.handlers.scene_update_post
-    else:  # 2.8+
-        handlers = bpy.app.handlers.depsgraph_update_post
-    in_handles = updater_run_install_popup_handler in handlers
-
-    if in_handles or ran_auto_check_install_popup:
-        return
-
-    if "scene_update_post" in dir(bpy.app.handlers):  # 2.7x
-        bpy.app.handlers.scene_update_post.append(
-            updater_run_install_popup_handler)
-    else:  # 2.8+
-        bpy.app.handlers.depsgraph_update_post.append(
-            updater_run_install_popup_handler)
-    ran_auto_check_install_popup = True
-    updater.print_verbose("Attempted popup prompt")
+        
+    # Güncelleme kontrolünü başlat
+    updater.check_for_update_async(background_update_callback)
 
 
 def post_update_callback(module_name, res=None):
@@ -1551,17 +1545,3 @@ def unregister():
 
     global ran_background_check
     ran_background_check = False
-
-# Otomatik güncelleme kontrolü için handler fonksiyonu
-@persistent
-def auto_check_for_update(scene):
-    """Blender başlatıldığında otomatik güncelleme kontrolü yapar"""
-    if updater.invalid_updater:
-        return
-    
-    # Eğer zaten kontrol yapılıyorsa veya güncelleme hazırsa çık
-    if updater.async_checking or updater.update_ready is not None:
-        return
-        
-    # Güncelleme kontrolünü başlat
-    updater.check_for_update_async(background_update_callback)
