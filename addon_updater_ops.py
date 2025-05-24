@@ -801,9 +801,22 @@ def check_for_update_background():
     # input, if true: update ready, if false: no update ready.
     def show_update_popup(update_ready):
         if update_ready:
-            atr = AddonUpdaterInstallPopup.bl_idname.split(".")
-            getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
+            # Add to the update handler to trigger the popup
+            handlers = []
+            if "scene_update_post" in dir(bpy.app.handlers):  # 2.7x
+                handlers = bpy.app.handlers.scene_update_post
+            else:  # 2.8+
+                handlers = bpy.app.handlers.depsgraph_update_post
+            
+            if updater_run_install_popup_handler not in handlers:
+                if "scene_update_post" in dir(bpy.app.handlers):  # 2.7x
+                    bpy.app.handlers.scene_update_post.append(
+                        updater_run_install_popup_handler)
+                else:  # 2.8+
+                    bpy.app.handlers.depsgraph_update_post.append(
+                        updater_run_install_popup_handler)
     
+    # Force check for update now
     updater.check_for_update_async(show_update_popup)
     ran_background_check = True
 
