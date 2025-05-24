@@ -831,14 +831,47 @@ def check_for_update_nonthreaded(self, context):
         self.report({'INFO'}, "No update ready")
 
 
-def show_popup():
-    """Güncelleme bildirimi gösterir"""
+def show_reload_popup():
+    """For use in register only, to show popup after re-enabling the addon.
+
+    Must be enabled by developer.
+    """
     if updater.invalid_updater:
         return
-        
-    if updater.update_ready:
-        atr = AddonUpdaterInstallPopup.bl_idname.split(".")
-        getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
+    saved_state = updater.json
+    global ran_update_success_popup
+
+    has_state = saved_state is not None
+    just_updated = "just_updated" in saved_state
+    updated_info = saved_state["just_updated"]
+
+    if not (has_state and just_updated and updated_info):
+        return
+
+    updater.json_reset_postupdate()  # So this only runs once.
+
+    # No handlers in this case.
+    if not updater.auto_reload_post_update:
+        return
+
+    # See if we need add to the update handler to trigger the popup.
+    handlers = []
+    if "scene_update_post" in dir(bpy.app.handlers):  # 2.7x
+        handlers = bpy.app.handlers.scene_update_post
+    else:  # 2.8+
+        handlers = bpy.app.handlers.depsgraph_update_post
+    in_handles = updater_run_success_popup_handler in handlers
+
+    if in_handles or ran_update_success_popup:
+        return
+
+    if "scene_update_post" in dir(bpy.app.handlers):  # 2.7x
+        bpy.app.handlers.scene_update_post.append(
+            updater_run_success_popup_handler)
+    else:  # 2.8+
+        bpy.app.handlers.depsgraph_update_post.append(
+            updater_run_success_popup_handler)
+    ran_update_success_popup = True
 
 
 # -----------------------------------------------------------------------------
@@ -1340,7 +1373,7 @@ def register(bl_info):
     updater.current_version = bl_info["version"]
 
     # Otomatik güncelleme kontrolü için varsayılan ayarları ayarla
-    updater.set_check_interval(enabled=True, months=0, days=0, hours=0, minutes=0)
+    updater.set_check_interval(enabled=True, months=0, days=0, hours=0, minutes=1)
 
     # Optional, consider turning off for production or allow as an option
     # This will print out additional debugging info to the console
@@ -1491,7 +1524,7 @@ def register(bl_info):
 
     # Special situation: we just updated the addon, show a popup to tell the
     # user it worked. Could enclosed in try/catch in case other issues arise.
-    show_popup()
+    show_reload_popup()
 
 
 def unregister():

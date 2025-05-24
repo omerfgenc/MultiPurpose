@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 5),
+    'version': (1, 3, 0),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -37,22 +37,8 @@ updater.set_check_interval(
     enabled=True,  # Otomatik güncelleme kontrolünü etkinleştir
     days=0,  # Her gün kontrol et
     hours=0,  # Saat bazında kontrol yok
-    minutes=0  # Dakika bazında kontrol yok
+    minutes=1  # Dakika bazında kontrol yok
 )
-
-# Otomatik güncelleme kontrolü için handler'ı ekle
-@bpy.app.handlers.load_post.append
-def auto_check_for_update(scene):
-    """Blender açıldığında otomatik güncelleme kontrolü yapar"""
-    if updater.invalid_updater:
-        return
-    updater.check_for_update_now(background_update_callback)
-
-def background_update_callback(update_ready):
-    """Güncelleme kontrolü sonrası çağrılır"""
-    if update_ready:
-        # Güncelleme varsa bildirim göster
-        updater.show_popup()
 
 ############################ Link Operations ############################
 
@@ -1205,7 +1191,7 @@ class DemoPreferences(bpy.types.AddonPreferences):
 	updater_interval_days = bpy.props.IntProperty(
 		name='Days',
 		description="Number of days between checking for updates",
-		default=1,
+		default=0,
 		min=0,
 		max=31)
 
@@ -1219,7 +1205,7 @@ class DemoPreferences(bpy.types.AddonPreferences):
 	updater_interval_minutes = bpy.props.IntProperty(
 		name='Minutes',
 		description="Number of minutes between checking for updates",
-		default=0,
+		default=1,
 		min=0,
 		max=59)
 
