@@ -1213,6 +1213,39 @@ class DemoPreferences(bpy.types.AddonPreferences):
 		layout = self.layout
 		addon_updater_ops.update_settings_ui(self, context)
 
+# Arka planda güncelleme kontrolü için fonksiyon
+def check_for_update_background():
+    """Arka planda güncelleme kontrolü yapar"""
+    if updater.invalid_updater:
+        return
+    global ran_background_check
+    if ran_background_check:
+        # Global değişken kontrolün sadece bir kez yapılmasını sağlar
+        return
+    elif updater.update_ready is not None or updater.async_checking:
+        # Kontrol zaten yapıldı
+        return
+
+    # UI ayarlarını uygula
+    settings = get_user_preferences(bpy.context)
+    if not settings:
+        return
+    updater.set_check_interval(enabled=settings.auto_check_update,
+                               months=settings.updater_interval_months,
+                               days=settings.updater_interval_days,
+                               hours=settings.updater_interval_hours,
+                               minutes=settings.updater_interval_minutes)
+
+    # Güncelleme kontrolünü başlat
+    updater.check_for_update_async(background_update_callback)
+    ran_background_check = True
+
+# Register the updater's background check handler
+if "scene_update_post" in dir(bpy.app.handlers):
+    bpy.app.handlers.scene_update_post.append(check_for_update_background)
+else:
+    bpy.app.handlers.depsgraph_update_post.append(check_for_update_background)
+
 classes = (
     # Link Operations
     MP_PT_LinkOperations, MP_OT_FindFilePaths, MP_OT_KarakterRigi, MP_OT_ModelRigi, MP_OT_RelationsMake,
@@ -1249,12 +1282,6 @@ def register():
         except Exception as e:
             print("Registration failed for some classes: {}".format(str(e)))
             pass
-
-    # Register the updater's background check handler
-    if "scene_update_post" in dir(bpy.app.handlers):
-        bpy.app.handlers.scene_update_post.append(check_for_update_background)
-    else:
-        bpy.app.handlers.depsgraph_update_post.append(check_for_update_background)
 
     # Güncelleme varsa bildirim göster
     if addon_updater_ops.updater.update_ready:
