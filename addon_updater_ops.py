@@ -799,7 +799,12 @@ def check_for_update_background():
 
     # Input is an optional callback function. This function should take a bool
     # input, if true: update ready, if false: no update ready.
-    updater.check_for_update_async(background_update_callback)
+    def show_update_popup(update_ready):
+        if update_ready:
+            atr = AddonUpdaterInstallPopup.bl_idname.split(".")
+            getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
+    
+    updater.check_for_update_async(show_update_popup)
     ran_background_check = True
 
 
