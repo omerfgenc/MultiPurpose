@@ -35,10 +35,24 @@ updater.show_popups = True  # Güncelleme bildirimlerini göster
 # Güncelleme kontrol aralığı ayarları
 updater.set_check_interval(
     enabled=True,  # Otomatik güncelleme kontrolünü etkinleştir
-    days=1,  # Her gün kontrol et
+    days=0,  # Her gün kontrol et
     hours=0,  # Saat bazında kontrol yok
     minutes=0  # Dakika bazında kontrol yok
 )
+
+# Otomatik güncelleme kontrolü için handler'ı ekle
+@bpy.app.handlers.load_post.append
+def auto_check_for_update(scene):
+    """Blender açıldığında otomatik güncelleme kontrolü yapar"""
+    if updater.invalid_updater:
+        return
+    updater.check_for_update_now(background_update_callback)
+
+def background_update_callback(update_ready):
+    """Güncelleme kontrolü sonrası çağrılır"""
+    if update_ready:
+        # Güncelleme varsa bildirim göster
+        updater.show_popup()
 
 ############################ Link Operations ############################
 
