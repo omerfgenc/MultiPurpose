@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 2, 9),
+    'version': (1, 3, 0),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
@@ -1155,7 +1155,7 @@ class DemoPreferences(bpy.types.AddonPreferences):
 	auto_check_update = bpy.props.BoolProperty(
 		name="Auto-check for Update",
 		description="If enabled, auto-check for updates using an interval",
-		default=False)
+		default=True)
 
 	updater_interval_months = bpy.props.IntProperty(
 		name='Months',
@@ -1181,7 +1181,7 @@ class DemoPreferences(bpy.types.AddonPreferences):
 		name='Minutes',
 		description="Number of minutes between checking for updates",
 		default=0,
-		min=0,
+		min=1,
 		max=59)
 
 	def draw(self, context):
