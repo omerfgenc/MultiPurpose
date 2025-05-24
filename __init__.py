@@ -3,7 +3,7 @@ bl_info = {
     'author': 'Yazılımcı Genç',
     'description': "Bismillah! Blender'da işlerimizi kolaylaştırmak amacıyla yazılmıştır.",
     'blender': (4, 4, 0),
-    'version': (1, 3, 6),
+    'version': (1, 3, 7),
     'location': 'View3D > Sidebar > mp',
     'warning': '',
     'wiki_url': "",
